@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  member
+  admin
+}
+
+enum MembershipStatus {
+  inactive
+  pending
+  active
+  expired
+  rejected
+}
+
+enum EventType {
+  national
+  domestic
+  collaborative
+  industrial_visit
+}
+
+model User {
+  id                String             @id @default(cuid())
+  name              String
+  email             String             @unique
+  password          String
+  profileImage      String?
+  role              UserRole           @default(member)
+  membershipStatus  MembershipStatus   @default(inactive)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  memberships       Membership[]
+  registrations     EventRegistration[]
+  activities        Activity[]
+  researches        Research[]
+}
+
+model Membership {
+  id            String             @id @default(uuid())
+  userId        String
+  fullName      String
+  email         String
+  phone         String
+  membershipId  String
+  status        MembershipStatus   @default(pending)
+  approvedAt    DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id                String              @id @default(cuid())
+  title             String
+  type              EventType
+  date              DateTime
+  description       String
+  location          String
+  registrationLink  String?
+  coverImage        String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  galleryItems      Gallery[]
+  registrations     EventRegistration[]
+}
+
+model EventRegistration {
+  id          String    @id @default(cuid())
+  userId      String
+  eventId     String
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model Gallery {
+  id          String    @id @default(cuid())
+  eventId     String
+  imageUrl    String
+  caption     String?
+  createdAt   DateTime  @default(now())
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Committee {
+  id          String    @id @default(cuid())
+  name        String
+  role        String
+  image       String
+  isAlumni    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Content {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  value       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Activity {
+  id          String    @id @default(cuid())
+  userId      String
+  label       String
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Research {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  content     String
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  status      String    @default("pending")
+  githubUrl   String?
+  paperUrl    String?
+  demoUrl     String?
+  images      String[]
+  tags        String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

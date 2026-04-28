@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef4fb;
+  --foreground: #0f172a;
+  --denim-50: #eff6ff;
+  --denim-100: #dbeafe;
+  --denim-200: #bfdbfe;
+  --denim-300: #93c5fd;
+  --denim-400: #60a5fa;
+  --denim-500: #3b82f6;
+  --denim-600: #2563eb;
+  --denim-700: #1d4ed8;
+  --denim-800: #1e3a8a;
+  --denim-900: #172554;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  min-width: 0;
+}
+
+button,
+[role="button"],
+a {
+  cursor: pointer;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(147, 197, 253, 0.35), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.18), transparent 25%),
+    linear-gradient(180deg, #f8fbff 0%, #edf4fb 55%, #f8fbff 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main {
+  display: block;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.page-shell {
+  width: 100%;
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+}
+
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px);
+}
