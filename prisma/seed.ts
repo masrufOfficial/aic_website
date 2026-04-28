@@ -94,7 +94,7 @@ async function main() {
       name: "Demo Member",
       email: "member@bubtai.org",
       password: memberPassword,
-      role: UserRole.member,
+      role: UserRole.user,
       membershipStatus: MembershipStatus.pending,
     },
   });

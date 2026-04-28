@@ -58,6 +58,10 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    return handleApiError(error, "Unable to create account.");
+    console.error("AUTH ERROR:", error);
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }

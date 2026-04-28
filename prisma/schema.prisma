@@ -8,7 +8,7 @@ datasource db {
 }
 
 enum UserRole {
-  member
+  user
   admin
 }
 
@@ -33,7 +33,7 @@ model User {
   email             String             @unique
   password          String
   profileImage      String?
-  role              UserRole           @default(member)
+  role              UserRole           @default(user)
   membershipStatus  MembershipStatus   @default(inactive)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
