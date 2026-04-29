@@ -1,20 +1,23 @@
-import { cookies } from "next/headers";
-import { verifyAuthToken } from "@/lib/auth";
+import { getCurrentApiUser } from "@/lib/auth";
 import { getContentMap } from "@/lib/content";
 import { NavbarClient } from "@/components/site/navbar-client";
 
 export default async function Navbar() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("bubt_ai_session")?.value;
-
-  const session = token ? await verifyAuthToken(token) : null;
-  const content = await getContentMap();
+  const [user, content] = await Promise.all([getCurrentApiUser(), getContentMap()]);
 
   return (
     <NavbarClient
       content={content}
-      isAdmin={session?.role === "admin"}
-      isLoggedIn={Boolean(session)}
+      isAdmin={user?.role === "admin"}
+      isLoggedIn={Boolean(user)}
+      user={
+        user
+          ? {
+              name: user.name,
+              image: user.image ?? user.profileImage ?? null,
+            }
+          : null
+      }
     />
   );
 }

@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/select";
 
 export function CommitteeManager({ members }: { members: Committee[] }) {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", role: "", image: "", isAlumni: "false" });
+  const [form, setForm] = useState({ name: "", role: "", image: "", group: "executive", isAlumni: "false" });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +24,13 @@ export function CommitteeManager({ members }: { members: Committee[] }) {
     const response = await fetch("/api/admin/committee", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        role: form.role,
-        image: form.image,
-        isAlumni: form.isAlumni === "true",
-      }),
+        body: JSON.stringify({
+          name: form.name,
+          role: form.role,
+          image: form.image,
+          group: form.group,
+          isAlumni: form.isAlumni === "true",
+        }),
     });
 
     const data = await response.json();
@@ -39,7 +40,7 @@ export function CommitteeManager({ members }: { members: Committee[] }) {
       return;
     }
 
-    setForm({ name: "", role: "", image: "", isAlumni: "false" });
+    setForm({ name: "", role: "", image: "", group: "executive", isAlumni: "false" });
     setLoading(false);
     setMessage("Committee member saved successfully.");
     router.refresh();
@@ -69,6 +70,12 @@ export function CommitteeManager({ members }: { members: Committee[] }) {
           <Input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <Input placeholder="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
           <Input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
+          <Select value={form.group} onChange={(e) => setForm({ ...form, group: e.target.value })}>
+            <option value="president">President</option>
+            <option value="executive">Executive</option>
+            <option value="moderator">Moderator</option>
+            <option value="alumni">Alumni</option>
+          </Select>
           <Select value={form.isAlumni} onChange={(e) => setForm({ ...form, isAlumni: e.target.value })}>
             <option value="false">Current Committee</option>
             <option value="true">Alumni</option>
@@ -88,7 +95,7 @@ export function CommitteeManager({ members }: { members: Committee[] }) {
             <CardContent className="space-y-3 pt-6">
               <h3 className="text-lg font-semibold text-slate-950">{member.name}</h3>
               <p className="text-sm text-slate-500">
-                {member.role} | {member.isAlumni ? "Alumni" : "Committee"}
+                {member.role} | {member.isAlumni ? "Alumni" : member.group}
               </p>
               <Button variant="destructive" onClick={() => removeMember(member.id)} type="button">
                 Delete

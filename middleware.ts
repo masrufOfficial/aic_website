@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 import { verifySessionToken } from "@/lib/session";
 
 const SESSION_COOKIE = "bubt_ai_session";
-const protectedRoutes = ["/profile", "/membership", "/dashboard"];
+const protectedRoutes = ["/profile", "/membership", "/dashboard", "/executive"];
 const adminRoutes = ["/admin"];
 const mutationMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -64,14 +65,22 @@ export async function middleware(request: NextRequest) {
   }
 
   const payload = token ? await verifySessionToken(token) : null;
+  const nextAuthToken = payload
+    ? null
+    : await getToken({
+        req: request,
+        secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+      });
 
-  if (!payload) {
+  if (!payload && !nextAuthToken) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return applySecurityHeaders(NextResponse.redirect(loginUrl));
   }
 
-  if (isAdmin && payload.role !== "admin") {
+  const resolvedRole = payload?.role ?? nextAuthToken?.role;
+
+  if (isAdmin && resolvedRole !== "admin") {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return applySecurityHeaders(NextResponse.redirect(loginUrl));

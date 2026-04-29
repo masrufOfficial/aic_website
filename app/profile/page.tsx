@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { isVerifiedMember } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getLatestMembership, getMembershipBadgeVariant } from "@/lib/membership";
 import { formatDate, titleCase } from "@/lib/utils";
@@ -76,8 +77,10 @@ export default async function ProfilePage() {
         user={{
           name: user.name,
           email: user.email,
+          image: user.image ?? null,
           profileImage: user.profileImage ?? null,
           membershipStatus: user.membershipStatus,
+          emailVerified: user.emailVerified,
         }}
       />
 
@@ -92,6 +95,24 @@ export default async function ProfilePage() {
           <Link href="/dashboard/research">
             <Button>Open Research Dashboard</Button>
           </Link>
+        </div>
+      </Card>
+
+      <Card className="border-slate-200/80 bg-white/85">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[var(--denim-500)]">Executive Panel</p>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              Verified members can apply for the executive panel with their CV, skills, and motivation statement.
+            </p>
+          </div>
+          {isVerifiedMember(user) ? (
+            <Link href="/executive/apply">
+              <Button>Apply for Executive</Button>
+            </Link>
+          ) : (
+            <Button disabled>Verification Required</Button>
+          )}
         </div>
       </Card>
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ImageDisplay } from "@/components/ui/ImageDisplay";
@@ -50,14 +50,20 @@ export function NavbarClient({
   content,
   isAdmin,
   isLoggedIn,
+  user,
 }: {
   content: ContentMap;
   isAdmin: boolean;
   isLoggedIn: boolean;
+  user: {
+    name: string;
+    image: string | null;
+  } | null;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clubName = content.club_name || siteConfig.name;
   const subtitle = "Bangladesh University of Business and Technology (BUBT)";
@@ -69,6 +75,32 @@ export function NavbarClient({
     setMobileOpen(false);
     setMoreOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  function openMoreMenu() {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setMoreOpen(true);
+  }
+
+  function closeMoreMenuWithDelay() {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+
+    closeTimeoutRef.current = setTimeout(() => {
+      setMoreOpen(false);
+    }, 180);
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur">
@@ -114,8 +146,8 @@ export function NavbarClient({
 
           <div
             className="relative shrink-0"
-            onMouseEnter={() => setMoreOpen(true)}
-            onMouseLeave={() => setMoreOpen(false)}
+            onMouseEnter={openMoreMenu}
+            onMouseLeave={closeMoreMenuWithDelay}
           >
             <button
               className={cn(
@@ -130,6 +162,8 @@ export function NavbarClient({
             </button>
 
             <div
+              onMouseEnter={openMoreMenu}
+              onMouseLeave={closeMoreMenuWithDelay}
               className={cn(
                 "absolute left-1/2 top-full z-50 mt-3 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-xl backdrop-blur",
                 moreOpen ? "block" : "hidden"
@@ -167,7 +201,16 @@ export function NavbarClient({
                 </Button>
               </Link>
               <Link href="/profile">
-                <Button size="sm">Profile</Button>
+                <Button className="gap-2" size="sm">
+                  {user?.image ? (
+                    <img alt={user.name} className="h-6 w-6 rounded-full object-cover" src={user.image} />
+                  ) : (
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  Profile
+                </Button>
               </Link>
             </>
           ) : (
@@ -247,7 +290,16 @@ export function NavbarClient({
                   </Button>
                 </Link>
                 <Link href="/profile">
-                  <Button className="w-full">Profile</Button>
+                  <Button className="w-full justify-center gap-2">
+                    {user?.image ? (
+                      <img alt={user.name} className="h-6 w-6 rounded-full object-cover" src={user.image} />
+                    ) : (
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    Profile
+                  </Button>
                 </Link>
               </>
             ) : (

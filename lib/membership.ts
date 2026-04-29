@@ -68,6 +68,7 @@ export async function expireMemberships() {
       },
       data: {
         membershipStatus: "expired",
+        membershipExpiry: now,
       },
     }),
   ]);
@@ -88,7 +89,10 @@ export async function syncUserMembershipState(userId: string) {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { membershipStatus: nextStatus },
+    data: {
+      membershipStatus: nextStatus,
+      membershipExpiry: latestMembership?.expiresAt ?? null,
+    },
   });
 
   return latestMembership;
@@ -114,6 +118,7 @@ export async function approveMembershipRequest(membershipId: string) {
     where: { id: membership.userId },
     data: {
       membershipStatus: "active",
+      membershipExpiry: expiresAt,
     },
   });
 
@@ -137,6 +142,7 @@ export async function rejectMembershipRequest(membershipId: string) {
     where: { id: membership.userId },
     data: {
       membershipStatus: "rejected",
+      membershipExpiry: null,
     },
   });
 

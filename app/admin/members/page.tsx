@@ -13,6 +13,14 @@ export default async function AdminMembersPage() {
 
   const [users, memberships] = await Promise.all([
     prisma.user.findMany({
+      include: {
+        memberships: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+        },
+      },
       orderBy: { createdAt: "desc" },
     }),
     prisma.membership.findMany({

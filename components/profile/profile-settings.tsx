@@ -1,12 +1,14 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
-import { Camera, ImagePlus, LoaderCircle, Link2 } from "lucide-react";
+import { useState } from "react";
+import { ImagePlus, LoaderCircle, Link2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { getMembershipBadgeVariant } from "@/lib/membership";
 import { formatDate, titleCase } from "@/lib/utils";
 
@@ -24,15 +26,18 @@ export function ProfileSettings({
   user: {
     name: string;
     email: string;
+    image: string | null;
     profileImage: string | null;
     membershipStatus: MembershipSummary["status"];
+    emailVerified: boolean;
   };
   latestMembership: MembershipSummary | null;
 }) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
-  const [profileImage, setProfileImage] = useState(user.profileImage ?? "");
-  const [imageUrlInput, setImageUrlInput] = useState(user.profileImage ?? "");
+  const initialImage = user.image ?? user.profileImage ?? "";
+  const [profileImage, setProfileImage] = useState(initialImage);
+  const [imageUrlInput, setImageUrlInput] = useState(initialImage);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -93,8 +98,8 @@ export function ProfileSettings({
     }
   }
 
-  async function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
-    if (!event.target.files?.length) {
+  async function handleImageUpload(files: FileList | null) {
+    if (!files?.length) {
       return;
     }
 
@@ -105,7 +110,7 @@ export function ProfileSettings({
     try {
       const formData = new FormData();
       formData.append("folder", "profiles");
-      formData.append("files", event.target.files[0]);
+      formData.append("files", files[0]);
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -124,7 +129,6 @@ export function ProfileSettings({
       setError(uploadError instanceof Error ? uploadError.message : "Unable to upload image.");
     } finally {
       setUploadingImage(false);
-      event.target.value = "";
     }
   }
 
@@ -172,6 +176,9 @@ export function ProfileSettings({
             </div>
             <p className="mt-4 text-lg font-semibold text-slate-950">{name}</p>
             <p className="text-sm text-slate-500">{email}</p>
+            <p className="mt-2 text-xs font-medium uppercase tracking-[0.25em] text-[var(--denim-600)]">
+              {user.emailVerified ? "Verified account" : "Pending email verification"}
+            </p>
           </div>
 
           <div className="space-y-3 text-sm text-slate-700">
@@ -226,14 +233,19 @@ export function ProfileSettings({
             </div>
 
             <div className="rounded-2xl border border-dashed border-[var(--denim-300)] bg-[var(--denim-50)]/70 p-4">
-              <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--denim-700)]">
-                {uploadingImage ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                Upload profile image
-                <input accept="image/*" className="hidden" onChange={handleImageUpload} type="file" />
-              </label>
-              <p className="mt-2 text-xs text-slate-500">
-                Upload a file or paste a public image URL. The uploaded file takes effect immediately in preview.
-              </p>
+              {uploadingImage ? (
+                <div className="inline-flex items-center gap-2 text-sm font-medium text-[var(--denim-700)]">
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Uploading profile image...
+                </div>
+              ) : (
+                <FileDropzone
+                  accept="image/*"
+                  description="Drop an image here or click to upload. Uploaded files preview immediately."
+                  label="Upload profile image"
+                  onFilesSelected={handleImageUpload}
+                />
+              )}
             </div>
 
             {message && <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}
@@ -254,11 +266,11 @@ export function ProfileSettings({
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">Current Password</label>
-                <Input onChange={(event) => setCurrentPassword(event.target.value)} type="password" value={currentPassword} />
+                <PasswordInput onChange={(event) => setCurrentPassword(event.target.value)} value={currentPassword} />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">New Password</label>
-                <Input onChange={(event) => setNewPassword(event.target.value)} type="password" value={newPassword} />
+                <PasswordInput onChange={(event) => setNewPassword(event.target.value)} value={newPassword} />
               </div>
             </div>
 

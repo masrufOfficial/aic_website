@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ensureAdminApi } from "@/lib/admin";
 import { apiError, handleApiError, parseBody } from "@/lib/api";
+import { sendMembershipApprovedEmail } from "@/lib/email";
 import { approveMembershipRequest, expireMemberships, rejectMembershipRequest } from "@/lib/membership";
 import { prisma } from "@/lib/prisma";
 import { enforceMutationSecurity } from "@/lib/security";
@@ -43,6 +44,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         label: `Membership ${body.status}`,
       },
     });
+
+    if (body.status === "active") {
+      void sendMembershipApprovedEmail({
+        email: membership.email,
+        name: membership.fullName,
+        membershipId: membership.membershipId,
+        expiryDate: membership.expiresAt,
+      });
+    }
 
     return NextResponse.json(membership, { status: 200 });
   } catch (error) {

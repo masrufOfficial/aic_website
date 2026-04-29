@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { apiError, handleApiError, parseBody } from "@/lib/api";
 import { getCurrentApiUser } from "@/lib/auth";
+import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { enforceMutationSecurity, sanitizePlainText } from "@/lib/security";
 import { updateUserSchema } from "@/lib/validators";
@@ -25,12 +26,16 @@ export async function PATCH(request: Request) {
     const body = await parseBody(request, updateUserSchema.pick({
       name: true,
       email: true,
+      image: true,
       profileImage: true,
     }));
+    const normalizedEmail = body.email?.trim().toLowerCase();
 
-    if (body.profileImage) {
+    const selectedImage = body.image || body.profileImage;
+
+    if (selectedImage) {
       try {
-        const parsedUrl = new URL(body.profileImage);
+        const parsedUrl = new URL(selectedImage);
         if (!["http:", "https:"].includes(parsedUrl.protocol)) {
           return apiError("Profile image URL must use http or https.", 400);
         }
@@ -43,17 +48,30 @@ export async function PATCH(request: Request) {
       where: { id: user.id },
       data: {
         name: body.name ? sanitizePlainText(body.name) : undefined,
-        email: body.email?.trim().toLowerCase(),
-        profileImage: body.profileImage || null,
+        email: normalizedEmail,
+        image: selectedImage || null,
+        profileImage: selectedImage || null,
+        emailVerified: normalizedEmail && normalizedEmail !== user.email ? false : undefined,
       },
       select: {
         id: true,
         name: true,
         email: true,
+        image: true,
         profileImage: true,
         membershipStatus: true,
+        emailVerified: true,
       },
     });
+
+    if (normalizedEmail && normalizedEmail !== user.email) {
+      const token = await createEmailVerificationToken(user.id);
+      await sendVerificationEmail({
+        email: normalizedEmail,
+        name: updatedUser.name,
+        token,
+      });
+    }
 
     return NextResponse.json(updatedUser);
   } catch (error) {

@@ -4,12 +4,16 @@ import { z } from "zod";
 export const registerSchema = z.object({
   name: z.string().min(2).max(60),
   email: z.email(),
-  password: z.string().min(6),
+  password: z
+    .string()
+    .min(8)
+    .regex(/[A-Z]/, "Password must include an uppercase letter")
+    .regex(/[0-9]/, "Password must include a number"),
 });
 
 export const loginSchema = z.object({
   email: z.email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
 });
 
 export const membershipSchema = z.object({
@@ -58,15 +62,20 @@ export const committeeSchema = z.object({
   name: z.string().min(2),
   role: z.string().min(2),
   image: z.url(),
+  group: z.enum(["president", "executive", "moderator", "alumni"]).optional(),
   isAlumni: z.boolean().optional(),
+  userId: z.string().optional().or(z.literal("")),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).max(60).optional(),
   email: z.email().optional(),
+  image: z.url().optional().or(z.literal("")),
   profileImage: z.url().optional().or(z.literal("")),
   role: z.nativeEnum(UserRole).optional(),
+  emailVerified: z.boolean().optional(),
   membershipStatus: z.nativeEnum(MembershipStatus).optional(),
+  membershipExpiry: z.string().datetime().optional().or(z.literal("")),
 });
 
 export const changePasswordSchema = z.object({
@@ -76,6 +85,17 @@ export const changePasswordSchema = z.object({
     .min(8)
     .regex(/[A-Z]/, "Password must include an uppercase letter")
     .regex(/[0-9]/, "Password must include a number"),
+});
+
+export const executiveApplicationSchema = z.object({
+  fullName: z.string().min(2).max(100),
+  cvUrl: z.url(),
+  skills: z.string().min(10).max(1200),
+  motivation: z.string().min(20).max(2000),
+});
+
+export const executiveApplicationReviewSchema = z.object({
+  status: z.enum(["approved", "rejected"]),
 });
 
 export const contentUpdateSchema = z.object({

@@ -9,7 +9,7 @@ export function CommitteeCard({
   imageFit = "cover",
   imageRounded = true,
 }: {
-  member: Committee;
+  member: Pick<Committee, "name" | "role" | "image" | "isAlumni" | "group">;
   imageRatio?: "16:9" | "1:1" | "4:3";
   imageFit?: "cover" | "contain";
   imageRounded?: boolean;
@@ -20,7 +20,9 @@ export function CommitteeCard({
         <ImageDisplay alt={member.name} aspectRatio={imageRatio} fit={imageFit} rounded={imageRounded} src={member.image} />
       </div>
       <div className="p-5 md:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--denim-600)]">{member.isAlumni ? "Alumni" : "Committee"}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--denim-600)]">
+          {member.isAlumni ? "Alumni" : member.group}
+        </p>
         <h3 className="mt-3 text-xl font-semibold text-slate-950 md:text-2xl">{member.name}</h3>
         <p className="mt-2 text-sm text-slate-600 md:text-base">{member.role}</p>
       </div>

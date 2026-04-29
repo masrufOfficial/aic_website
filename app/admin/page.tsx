@@ -51,6 +51,12 @@ export default async function AdminDashboardPage() {
       description: "Approve memberships, change roles, and maintain member status.",
       icon: UsersRound,
     },
+    {
+      href: "/admin/executive",
+      title: "Review executive applications",
+      description: "Approve verified-member applications and populate the executive showcase.",
+      icon: UsersRound,
+    },
   ];
 
   return (

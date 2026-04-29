@@ -1,5 +1,6 @@
 "use client";
 
+import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,6 +10,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { registerSchema, loginSchema } from "@/lib/validators";
 
 type RegisterValues = z.infer<typeof registerSchema>;
@@ -18,7 +20,17 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/profile";
+  const verificationState = searchParams.get("verified");
   const [serverError, setServerError] = useState<string | null>(null);
+  const [serverMessage, setServerMessage] = useState<string | null>(
+    verificationState === "success"
+      ? "Email verified successfully. You can log in now."
+      : verificationState === "expired"
+        ? "Verification link expired. Please register again or request a new email later."
+        : verificationState === "invalid"
+          ? "Verification link is invalid."
+          : null
+  );
   const schema = mode === "register" ? registerSchema : loginSchema;
 
   const {
@@ -31,6 +43,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   async function onSubmit(values: RegisterValues | LoginValues) {
     setServerError(null);
+    setServerMessage(null);
 
     const response = await fetch(`/api/auth/${mode}`, {
       method: "POST",
@@ -42,6 +55,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     if (!response.ok) {
       setServerError(data.error ?? "Something went wrong.");
+      return;
+    }
+
+    if (mode === "register") {
+      setServerMessage(data.message ?? "Registration complete. Please verify your email.");
       return;
     }
 
@@ -77,14 +95,24 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Password</label>
-            <Input placeholder="Enter your password" type="password" {...register("password")} />
+            <PasswordInput placeholder="Enter your password" {...register("password")} />
             {errors.password && <p className="text-sm text-red-600">{String(errors.password.message)}</p>}
           </div>
 
+          {serverMessage && <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{serverMessage}</p>}
           {serverError && <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{serverError}</p>}
 
           <Button className="w-full" disabled={isSubmitting} type="submit">
             {isSubmitting ? "Please wait..." : mode === "login" ? "Login" : "Register"}
+          </Button>
+
+          <Button
+            className="w-full"
+            onClick={() => signIn("google", { callbackUrl: redirect })}
+            type="button"
+            variant="outline"
+          >
+            Continue with Google
           </Button>
         </form>
       </CardContent>

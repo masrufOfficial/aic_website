@@ -29,6 +29,8 @@ export async function POST(request: Request) {
     const member = await prisma.committee.create({
       data: {
         ...body,
+        group: body.group ?? (body.isAlumni ? "alumni" : "executive"),
+        userId: body.userId || null,
         isAlumni: body.isAlumni ?? false,
       },
     });

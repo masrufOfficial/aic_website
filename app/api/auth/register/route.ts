@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { apiError, handleApiError, parseBody } from "@/lib/api";
-import { hashPassword, setSessionCookie } from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
+import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { enforceMutationSecurity } from "@/lib/security";
 import { registerSchema } from "@/lib/validators";
@@ -29,33 +30,30 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         name: body.name,
-        email: body.email,
+        email: body.email.toLowerCase(),
         password: await hashPassword(body.password),
+        role: "user",
+        emailVerified: false,
       },
+    });
+
+    const token = await createEmailVerificationToken(user.id);
+    await sendVerificationEmail({
+      email: user.email,
+      name: user.name,
+      token,
     });
 
     await prisma.activity.create({
       data: {
         userId: user.id,
-        label: "Account created",
+        label: "Account created and verification email sent",
       },
-    });
-
-    await setSessionCookie({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      membershipStatus: user.membershipStatus,
     });
 
     return NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      success: true,
+      message: "Account created. Please verify your email before logging in.",
     });
   } catch (error) {
     console.error("AUTH ERROR:", error);

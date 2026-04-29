@@ -5,6 +5,7 @@ import { ExternalLink, FileText, Github, Lock, MessageSquareMore, ThumbsUp } fro
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { isVerifiedMember } from "@/lib/access";
 import { getCurrentApiUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getResearchStatusLabel, summarizeResearchContent } from "@/lib/research";
@@ -43,7 +44,7 @@ export default async function ResearchDetailPage({ params }: { params: Promise<{
   const hasFullAccess =
     user?.role === "admin" ||
     user?.id === research.authorId ||
-    user?.membershipStatus === "active";
+    isVerifiedMember(user);
 
   const heroImage = research.images[0] || "https://picsum.photos/seed/research-detail/1600/900";
   const galleryImages = research.images.slice(1);

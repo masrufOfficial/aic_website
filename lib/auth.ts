@@ -3,6 +3,7 @@ import { MembershipStatus, UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getAuthSession } from "@/auth";
 import { syncUserMembershipState } from "@/lib/membership";
 import { prisma } from "@/lib/prisma";
 import { SessionPayload, signSessionToken, verifySessionToken } from "@/lib/session";
@@ -48,11 +49,22 @@ export async function getSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
-  if (!token) {
+  if (token) {
+    return verifyAuthToken(token);
+  }
+
+  const session = await getAuthSession();
+  if (!session?.user?.id || !session.user.email || !session.user.name) {
     return null;
   }
 
-  return verifyAuthToken(token);
+  return {
+    userId: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: (session.user.role as UserRole) ?? "user",
+    membershipStatus: (session.user.membershipStatus as MembershipStatus) ?? "inactive",
+  };
 }
 
 export async function getCurrentUser() {

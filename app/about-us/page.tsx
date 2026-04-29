@@ -10,14 +10,18 @@ import { SectionHeading } from "@/components/ui/section-heading";
 export const dynamic = "force-dynamic";
 
 export default async function AboutUsPage() {
-  const [committee, alumni, content] = await Promise.all([
-    prisma.committee.findMany({ where: { isAlumni: false } }),
+  const [committee, moderators, alumni, content] = await Promise.all([
+    prisma.committee.findMany({ where: { isAlumni: false, group: { in: ["president", "executive"] } } }),
+    prisma.user.findMany({ where: { role: "moderator" } }),
     prisma.committee.findMany({ where: { isAlumni: true } }),
     getContentMap(),
   ]);
   const imageRatio = getAspectRatioValue(content.image_ratio);
   const imageFit = content.image_fit === "contain" ? "contain" : "cover";
   const imageRounded = getRoundedValue(content.image_style);
+
+  const president = committee.find((member) => member.group === "president") ?? null;
+  const executiveMembers = committee.filter((member) => member.group !== "president");
 
   return (
     <div className="mx-auto max-w-7xl space-y-12 px-4 py-10 md:px-8 md:py-16 lg:px-16">
@@ -52,13 +56,51 @@ export default async function AboutUsPage() {
 
       <section className="space-y-8">
         <SectionHeading
-          eyebrow="Committee"
-          title="Current committee members"
-          description="These cards are driven by the Prisma `Committee` model so admins can update leadership without editing the page."
+          eyebrow="President"
+          title="Community leadership"
+          description="These cards are driven by Prisma data so admins can update the executive structure without editing the page."
+        />
+        {president && (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <CommitteeCard imageFit={imageFit} imageRatio={imageRatio} imageRounded={imageRounded} member={president} />
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-8">
+        <SectionHeading
+          eyebrow="Executive"
+          title="Executive members"
+          description="Approved executive applications and manually managed entries appear here."
         />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {committee.map((member: Committee) => (
+          {executiveMembers.map((member: Committee) => (
             <CommitteeCard imageFit={imageFit} imageRatio={imageRatio} imageRounded={imageRounded} key={member.id} member={member} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-8">
+        <SectionHeading
+          eyebrow="Moderators"
+          title="Moderation team"
+          description="Moderators are managed through user roles and automatically shown here."
+        />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {moderators.map((member) => (
+            <CommitteeCard
+              imageFit={imageFit}
+              imageRatio={imageRatio}
+              imageRounded={imageRounded}
+              key={member.id}
+              member={{
+                name: member.name,
+                role: "Moderator",
+                image: member.image ?? member.profileImage ?? "https://picsum.photos/seed/moderator/800/800",
+                isAlumni: false,
+                group: "moderator",
+              }}
+            />
           ))}
         </div>
       </section>

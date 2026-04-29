@@ -23,6 +23,10 @@ export async function PATCH(request: Request) {
     }
 
     const body = await parseBody(request, changePasswordSchema);
+    if (!user.password) {
+      return apiError("This account uses social login. Add password management separately if needed.", 400);
+    }
+
     const isValid = await comparePassword(body.currentPassword, user.password);
 
     if (!isValid) {

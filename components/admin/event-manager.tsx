@@ -2,12 +2,12 @@
 
 import { Event } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, useState } from "react";
-import { ImagePlus } from "lucide-react";
+import { useState } from "react";
 
 import { UploadPreviewGrid } from "@/components/admin/upload-preview-grid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -133,11 +133,18 @@ export function EventManager({ events }: { events: Event[] }) {
     return data;
   }
 
-  async function handleCoverUpload(e: ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
+  async function handleCoverUpload(files: FileList | null) {
     if (!files) return;
 
     setUploading(true);
+    setError(null);
+    setPreviewItems(
+      Array.from(files).map((file) => ({
+        id: `${file.name}-${file.size}`,
+        url: URL.createObjectURL(file),
+        name: file.name,
+      }))
+    );
 
     try {
       const data = await uploadFiles(files);
@@ -156,6 +163,8 @@ export function EventManager({ events }: { events: Event[] }) {
 
   async function saveEvent() {
     setLoading(true);
+    setError(null);
+    setMessage(null);
 
     const res = await fetch(
       editingId ? `/api/admin/events/${editingId}` : "/api/admin/events",
@@ -176,6 +185,8 @@ export function EventManager({ events }: { events: Event[] }) {
 
     setForm(initialState);
     setEditingId(null);
+    setPreviewItems([]);
+    setMessage(editingId ? "Event updated successfully." : "Event created successfully.");
     router.refresh();
     setLoading(false);
   }
@@ -213,6 +224,8 @@ export function EventManager({ events }: { events: Event[] }) {
             >
               <option value="national">National</option>
               <option value="domestic">Domestic</option>
+              <option value="collaborative">Collaborative</option>
+              <option value="industrial_visit">Industrial Visit</option>
             </Select>
 
             <Input
@@ -231,16 +244,36 @@ export function EventManager({ events }: { events: Event[] }) {
               }
             />
 
-            {/* IMAGE UPLOAD */}
-            <label className="border-dashed border p-4 flex justify-center cursor-pointer">
-              <ImagePlus className="w-4 h-4 mr-2" />
-              Upload Image
-              <input
-                type="file"
-                className="hidden"
-                onChange={handleCoverUpload}
-              />
-            </label>
+            <Input
+              placeholder="Registration Link"
+              value={form.registrationLink}
+              onChange={(e) =>
+                setForm({ ...form, registrationLink: e.target.value })
+              }
+            />
+
+            <Input
+              placeholder="Image URL"
+              value={form.coverImage}
+              onChange={(e) =>
+                setForm({ ...form, coverImage: e.target.value })
+              }
+            />
+
+            <FileDropzone
+              accept="image/*"
+              description="Drop an image here or click to upload into /public/uploads/events."
+              label={uploading ? "Uploading image..." : "Upload cover image"}
+              onFilesSelected={handleCoverUpload}
+            />
+
+            {previewItems.length > 0 && <UploadPreviewGrid items={previewItems} />}
+
+            {form.coverImage && (
+              <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <img alt="Event preview" className="h-48 w-full object-cover" src={form.coverImage} />
+              </div>
+            )}
 
             <Textarea
               placeholder="Description"
@@ -253,6 +286,8 @@ export function EventManager({ events }: { events: Event[] }) {
             <Button onClick={saveEvent} disabled={loading}>
               {loading ? "Saving..." : "Save Event"}
             </Button>
+            {message && <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}
+            {error && <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>}
           </CardContent>
         </Card>
       </div>

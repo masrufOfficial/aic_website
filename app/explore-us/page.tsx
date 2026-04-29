@@ -1,8 +1,8 @@
 import type { Event } from "@prisma/client";
 
+import { EventsSectionGrid } from "@/components/site/events-section-grid";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { EventCard } from "@/components/site/event-card";
 import { getContentMap } from "@/lib/content";
 import { getAspectRatioValue, getRoundedValue } from "@/lib/media";
 import { getExplorePageData } from "@/lib/queries";
@@ -36,11 +36,7 @@ export default async function ExploreUsPage() {
             title={`${label.charAt(0).toUpperCase() + label.slice(1)} events`}
             description={`Upcoming ${label} experiences designed for learning, networking, and applied AI growth.`}
           />
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((event: Event) => (
-              <EventCard event={event} imageFit={imageFit} imageRatio={imageRatio} imageRounded={imageRounded} key={event.id} />
-            ))}
-          </div>
+          <EventsSectionGrid events={items as Event[]} imageFit={imageFit} imageRatio={imageRatio} imageRounded={imageRounded} />
         </section>
       ))}
 

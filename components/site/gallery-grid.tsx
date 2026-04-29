@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Gallery, Event } from "@prisma/client";
 import { X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { ImageDisplay } from "@/components/ui/ImageDisplay";
+import { ITEMS_PER_PAGE, getPageCount, paginateItems } from "@/lib/pagination";
 
 type GalleryItem = Gallery & {
   event: Event;
@@ -22,11 +24,14 @@ export function GalleryGrid({
   imageRounded?: boolean;
 }) {
   const [selected, setSelected] = useState<GalleryItem | null>(null);
+  const [page, setPage] = useState(1);
+  const pageCount = getPageCount(items.length, ITEMS_PER_PAGE);
+  const paginatedItems = useMemo(() => paginateItems(items, page, ITEMS_PER_PAGE), [items, page]);
 
   return (
     <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {items.map((item) => (
+        {paginatedItems.map((item) => (
           <button
             key={item.id}
             className="group relative cursor-pointer text-left"
@@ -49,6 +54,20 @@ export function GalleryGrid({
           </button>
         ))}
       </div>
+
+      {items.length > ITEMS_PER_PAGE && (
+        <div className="flex items-center justify-center gap-3 pt-6">
+          <Button disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} type="button" variant="outline">
+            Previous
+          </Button>
+          <span className="text-sm text-slate-600">
+            Page {page} of {pageCount}
+          </span>
+          <Button disabled={page >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))} type="button" variant="outline">
+            Next
+          </Button>
+        </div>
+      )}
 
       {selected && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">

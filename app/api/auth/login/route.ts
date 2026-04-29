@@ -19,11 +19,15 @@ export async function POST(request: Request) {
 
     const body = await parseBody(request, loginSchema);
     const user = await prisma.user.findUnique({
-      where: { email: body.email },
+      where: { email: body.email.toLowerCase() },
     });
 
-    if (!user || !(await comparePassword(body.password, user.password))) {
+    if (!user?.password || !(await comparePassword(body.password, user.password))) {
       return apiError("Invalid email or password.", 401);
+    }
+
+    if (!user.emailVerified) {
+      return apiError("Please verify your email before logging in.", 403);
     }
 
     await prisma.activity.create({

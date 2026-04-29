@@ -43,3 +43,11 @@ export async function saveUploadedFile(file: File, folder = "general") {
 
   return `/uploads/${safeFolder}/${filename}`;
 }
+
+export function isImageUploadFolder(folder: string) {
+  return ["events", "gallery", "profiles", "branding", "research"].includes(folder);
+}
+
+export function isDocumentUploadFolder(folder: string) {
+  return ["executive-cv"].includes(folder);
+}

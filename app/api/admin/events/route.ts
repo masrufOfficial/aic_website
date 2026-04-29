@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { ensureAdminApi } from "@/lib/admin";
 import { apiError, parseBody } from "@/lib/api";
+import { sendNewEventEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { eventSchema } from "@/lib/validators";
 
@@ -34,6 +35,29 @@ export async function POST(request: Request) {
         coverImage: body.coverImage || null,
       },
     });
+
+    const recipients = await prisma.user.findMany({
+      where: {
+        emailVerified: true,
+      },
+      select: {
+        email: true,
+        name: true,
+      },
+    });
+
+    void Promise.allSettled(
+      recipients.map((recipient) =>
+        sendNewEventEmail({
+          email: recipient.email,
+          name: recipient.name,
+          eventTitle: event.title,
+          eventDate: event.date,
+          eventLocation: event.location,
+          eventDescription: event.description,
+        })
+      )
+    );
 
     return NextResponse.json(event, { status: 201 });
   } catch {

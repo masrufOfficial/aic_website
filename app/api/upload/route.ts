@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentApiUser } from "@/lib/auth";
 import { enforceMutationSecurity } from "@/lib/security";
-import { saveUploadedFile } from "@/lib/upload";
+import { isDocumentUploadFolder, isImageUploadFolder, saveUploadedFile } from "@/lib/upload";
 
 export const runtime = "nodejs";
 
@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     const entries = formData.getAll("files");
     const safeFolder = folder.replace(/[^a-z0-9-_]/gi, "").toLowerCase() || "general";
 
-    if (!isAdmin && !["research", "profiles"].includes(safeFolder)) {
-      return NextResponse.json({ error: "You can only upload research or profile files." }, { status: 403 });
+    if (!isAdmin && !["research", "profiles", "executive-cv"].includes(safeFolder)) {
+      return NextResponse.json({ error: "You can only upload research, profile, or CV files." }, { status: 403 });
     }
 
     if (entries.length === 0) {
@@ -42,8 +42,12 @@ export async function POST(request: Request) {
           throw new Error("Invalid file payload.");
         }
 
-        if (safeFolder === "profiles" && !entry.type.startsWith("image/")) {
-          throw new Error("Profile uploads must be images.");
+        if (isImageUploadFolder(safeFolder) && !entry.type.startsWith("image/")) {
+          throw new Error("This upload area only accepts image files.");
+        }
+
+        if (isDocumentUploadFolder(safeFolder) && entry.type !== "application/pdf") {
+          throw new Error("This upload area only accepts PDF files.");
         }
 
         const url = await saveUploadedFile(entry, safeFolder);

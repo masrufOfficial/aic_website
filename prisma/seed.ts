@@ -77,6 +77,7 @@ async function main() {
       password: adminPassword,
       role: UserRole.admin,
       membershipStatus: MembershipStatus.active,
+      emailVerified: true,
     },
     create: {
       name: "Platform Admin",
@@ -84,6 +85,7 @@ async function main() {
       password: adminPassword,
       role: UserRole.admin,
       membershipStatus: MembershipStatus.active,
+      emailVerified: true,
     },
   });
 
@@ -96,6 +98,7 @@ async function main() {
       password: memberPassword,
       role: UserRole.user,
       membershipStatus: MembershipStatus.pending,
+      emailVerified: true,
     },
   });
 
@@ -161,21 +164,25 @@ async function main() {
         name: "Afsana Rahman",
         role: "President",
         image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80",
+        group: "president",
       },
       {
         name: "Mahin Hasan",
         role: "Vice President",
         image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+        group: "executive",
       },
       {
         name: "Nafisa Chowdhury",
         role: "General Secretary",
         image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=800&q=80",
+        group: "executive",
       },
       {
         name: "Tanvir Ahmed",
         role: "Alumni Mentor",
         image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80",
+        group: "alumni",
         isAlumni: true,
       },
     ],

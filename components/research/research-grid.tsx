@@ -5,8 +5,10 @@ import { Search } from "lucide-react";
 
 import { ResearchCard } from "@/components/research/research-card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ITEMS_PER_PAGE, getPageCount, paginateItems } from "@/lib/pagination";
 
 type ResearchItem = {
   id: string;
@@ -23,6 +25,7 @@ type ResearchItem = {
 export function ResearchGrid({ items }: { items: ResearchItem[] }) {
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("all");
+  const [page, setPage] = useState(1);
 
   const tags = useMemo(() => {
     const values = new Set<string>();
@@ -46,6 +49,8 @@ export function ResearchGrid({ items }: { items: ResearchItem[] }) {
       return matchesSearch && matchesTag;
     });
   }, [items, search, selectedTag]);
+  const pageCount = getPageCount(filtered.length, ITEMS_PER_PAGE);
+  const paginated = useMemo(() => paginateItems(filtered, page, ITEMS_PER_PAGE), [filtered, page]);
 
   return (
     <div className="space-y-8">
@@ -65,7 +70,10 @@ export function ResearchGrid({ items }: { items: ResearchItem[] }) {
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 className="pl-10"
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
                 placeholder="Search research..."
                 value={search}
               />
@@ -80,7 +88,10 @@ export function ResearchGrid({ items }: { items: ResearchItem[] }) {
               <button
                 className="cursor-pointer"
                 key={tag}
-                onClick={() => setSelectedTag(tag)}
+                onClick={() => {
+                  setSelectedTag(tag);
+                  setPage(1);
+                }}
                 type="button"
               >
                 <Badge
@@ -96,7 +107,7 @@ export function ResearchGrid({ items }: { items: ResearchItem[] }) {
 
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((research) => (
+          {paginated.map((research) => (
             <ResearchCard key={research.id} research={research} />
           ))}
         </div>
@@ -105,6 +116,20 @@ export function ResearchGrid({ items }: { items: ResearchItem[] }) {
           <p className="text-lg font-semibold text-slate-900">No research matched your filters.</p>
           <p className="mt-2 text-sm text-slate-600">Try a different keyword or clear the selected tag.</p>
         </Card>
+      )}
+
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="flex items-center justify-center gap-3">
+          <Button disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} type="button" variant="outline">
+            Previous
+          </Button>
+          <span className="text-sm text-slate-600">
+            Page {page} of {pageCount}
+          </span>
+          <Button disabled={page >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))} type="button" variant="outline">
+            Next
+          </Button>
+        </div>
       )}
     </div>
   );
